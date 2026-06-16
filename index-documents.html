@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sanctioned Russian Banker — OCCRP Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Sans+3:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Code+Pro:wght@400;600&family=Lora:ital,wght@0,400;0,700;1,400&family=Inter+Tight:wght@400;700;900&family=Archivo+Narrow:wght@300;400;700&display=swap" />
+  <style>
+    /* ── Reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { font-family: 'Source Sans 3', sans-serif; color: #1a1a1a; background: #F4F3EC; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; width: 100%; height: auto; }
+
+    /* ── Tokens ──────────────────────────────────────────────── */
+    :root {
+      --red:        #D92429;
+      --red-dark:   #b01d21;
+      --text:       #1a1a1a;
+      --text-mid:   #444;
+      --text-light: #666;
+      --rule:       #ddd;
+    }
+
+    /* ── Top bar ─────────────────────────────────────────────── */
+    .top-bar { background: var(--red); height: 3px; }
+
+    /* ── Nav ─────────────────────────────────────────────────── */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: #F4F3EC;
+      border-bottom: 1px solid var(--rule);
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 64px; position: relative;
+    }
+    .nav-menu-btn {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text); background: none; border: none; cursor: pointer; padding: 0;
+    }
+    .nav-menu-btn svg { width: 20px; height: 20px; }
+    .nav-logo {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; text-decoration: none;
+    }
+    .nav-logo img { height: 60px; width: auto; display: block; }
+
+    /* ── Mega-menu ───────────────────────────────────────────── */
+    .mega-menu { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; }
+    .mega-menu.open { display: flex; }
+    .mega-menu-panel {
+      background: #fff; width: 320px; height: 100%; overflow-y: auto;
+      padding: 24px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .mega-menu-close {
+      align-self: flex-end; background: none; border: none;
+      font-size: 28px; cursor: pointer; color: var(--text); line-height: 1; margin-bottom: 16px;
+    }
+    .mega-menu-panel a {
+      display: block; padding: 10px 0; font-size: 15px; font-weight: 600;
+      border-bottom: 1px solid var(--rule); color: var(--text); transition: color .15s;
+    }
+    .mega-menu-panel a:hover { color: var(--red); }
+
+    /* ── Article header ──────────────────────────────────────── */
+    .article-header { max-width: 820px; margin: 40px auto 0; padding: 0 24px; }
+    .article-headline {
+      font-family: 'Inter Tight', sans-serif; font-size: 50px; font-weight: 700;
+      line-height: 1.1; color: #111; margin-bottom: 18px; text-align: center;
+    }
+    .article-deck {
+      font-family: 'Lora', serif; font-size: 17px; line-height: 1.55;
+      color: var(--text-mid); margin-bottom: 28px; text-align: center;
+    }
+
+    /* ── Byline ──────────────────────────────────────────────── */
+    .byline-wrap { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+    .reported-by-label {
+      font-family: 'Archivo Narrow', sans-serif; font-size: 18px; font-weight: 300;
+      letter-spacing: 0; text-transform: uppercase; color: var(--red);
+      margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+    }
+    .reported-by-label::before {
+      content: ''; display: block; width: 22px; height: 2px; background: var(--red); flex-shrink: 0;
+    }
+    .author-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 2px solid #fff; background: #e0e0e0;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .author-names a { font-size: 13px; font-weight: 700; color: var(--red); transition: opacity .15s; }
+    .author-names a:hover { opacity: .7; }
+    .author-names .collab-note { font-size: 11px; color: var(--text-light); display: block; margin-top: 2px; }
+
+    /* ── Meta bar ────────────────────────────────────────────── */
+    .article-date {
+      font-family: 'Source Code Pro', monospace; font-size: 12px; font-weight: 400;
+      letter-spacing: .04em; text-transform: uppercase; color: var(--text-mid);
+    }
+    .article-read-time {
+      font-family: 'Source Code Pro', monospace; font-size: 12px; font-weight: 400;
+      letter-spacing: .04em; text-transform: uppercase; color: var(--text-mid);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .article-read-time svg { flex-shrink: 0; }
+    .article-meta { display: flex; align-items: center; gap: 8px; }
+    .article-meta-sep { color: var(--text-mid); font-size: 12px; font-weight: 400; opacity: .5; }
+    .share-bar { display: flex; align-items: center; gap: 8px; }
+    .share-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600; letter-spacing: .04em;
+      color: var(--text-mid); background: none; border: none;
+      border-radius: 3px; padding: 6px 10px; cursor: pointer; transition: all .15s;
+    }
+    .share-btn:hover { color: var(--red); }
+    .share-btn svg { width: 13px; height: 13px; stroke: var(--red); }
+    .article-meta-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; margin-bottom: 22px; border-top: 1px solid var(--rule); gap: 16px;
+    }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .hero-wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+    .hero-img { width: 100%; height: 480px; object-fit: cover; display: block; }
+    .hero-caption {
+      font-family: 'Source Code Pro', monospace; font-size: 12px;
+      color: var(--text-light); padding: 8px 0; margin-top: 6px; line-height: 1.5;
+    }
+    .hero-caption strong { font-weight: 600; color: var(--text-mid); }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .content-row {
+      max-width: 1100px; margin: 32px auto 60px; padding: 0 24px;
+      display: grid; grid-template-columns: 200px 1fr; gap: 48px; align-items: start;
+    }
+    .sidebar { position: sticky; top: 80px; }
+
+    /* ── Key Findings ────────────────────────────────────────── */
+    .key-findings { background: #F4F3EC; border-radius: 4px; padding: 18px 26px; margin-bottom: 32px; }
+    .key-findings summary {
+      font-family: 'Archivo Narrow', sans-serif; font-size: 18px; font-weight: 300;
+      letter-spacing: 0; text-transform: uppercase; color: var(--red);
+      cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; user-select: none;
+    }
+    .key-findings summary::-webkit-details-marker { display: none; }
+    .key-findings summary::before { content: ''; display: block; width: 22px; height: 2px; background: var(--red); flex-shrink: 0; }
+    .key-findings summary::after { content: '+'; font-size: 18px; font-weight: 300; color: var(--red); margin-left: auto; line-height: 1; }
+    .key-findings[open] summary::after { content: '−'; }
+    .key-findings ul { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,.1); }
+    .key-findings ul li { font-size: 14px; font-weight: 700; line-height: 1.55; color: var(--text); padding-left: 20px; position: relative; }
+    .key-findings ul li::before { content: '▸'; position: absolute; left: 0; color: var(--red); font-size: 12px; top: 2px; }
+
+    /* ── Article body ────────────────────────────────────────── */
+    .article-body { font-family: 'Lora', serif; font-size: 17px; line-height: 1.75; color: var(--text); }
+    .article-body p { margin-bottom: 22px; }
+    .article-body > p:first-of-type::first-letter {
+      font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900;
+      line-height: .82; float: left; margin-right: 6px; margin-top: 4px; color: var(--red);
+    }
+    .article-body a { color: var(--red); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color .15s; }
+    .article-body a:hover { text-decoration-color: var(--red); }
+    .article-body strong { font-weight: 700; }
+    .article-body h2 { font-family: 'Inter Tight', sans-serif; font-size: 26px; font-weight: 700; color: #111; margin: 36px 0 16px; }
+
+    /* ── Inline article image ────────────────────────────────── */
+    .article-image-wrap { position: relative; margin: 22px auto; cursor: pointer; max-width: 635px; }
+    .article-image-wrap img { width: 100%; height: auto; display: block; border-radius: 2px; }
+    .article-image-zoom {
+      position: absolute; top: 10px; right: 10px; width: 32px; height: 32px;
+      background: rgba(255,255,255,.85); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; backdrop-filter: blur(2px);
+    }
+    .article-image-zoom svg { width: 16px; height: 16px; stroke: var(--text); }
+    .article-image-wrap:hover .article-image-zoom { background: #fff; }
+    .article-image-credit { font-family: 'Source Code Pro', monospace; font-size: 11.5px; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
+
+    /* ── Lightbox ────────────────────────────────────────────── */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 300; align-items: center; justify-content: center; padding: 24px; }
+    .lightbox.open { display: flex; }
+    .lightbox-inner { position: relative; max-width: 860px; width: 100%; }
+    .lightbox-inner img { width: 100%; height: auto; display: block; border-radius: 3px; }
+    .lightbox-credit { font-family: 'Source Code Pro', monospace; font-size: 11.5px; color: rgba(255,255,255,.6); margin-top: 8px; line-height: 1.5; }
+    .lightbox-close {
+      position: absolute; top: -14px; right: -14px; width: 32px; height: 32px;
+      background: #fff; border: none; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; line-height: 1; color: var(--text); transition: background .15s;
+    }
+    .lightbox-close:hover { background: #eee; }
+
+    /* ── Key Players carousel ────────────────────────────────── */
+    .key-players { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--rule); }
+    .key-players-label {
+      font-family: 'Archivo Narrow', sans-serif; font-size: 18px; font-weight: 300;
+      letter-spacing: 0; text-transform: uppercase; color: var(--red);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .key-players-label::before { content: ''; display: block; width: 22px; height: 2px; background: var(--red); flex-shrink: 0; }
+    .carousel-viewport { overflow: hidden; position: relative; }
+    .carousel-track { display: flex; transition: transform .35s ease; }
+    .carousel-card { min-width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .carousel-card-header { display: flex; align-items: center; gap: 12px; }
+    .carousel-card-identity { display: flex; flex-direction: column; }
+    .carousel-card-photo { width: 56px; height: 56px; border-radius: 50%; border: 2px solid #fff; overflow: hidden; background: #d8d7d0; flex-shrink: 0; }
+    .carousel-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .carousel-card-name { font-family: 'Inter Tight', sans-serif; font-size: 13px; font-weight: 700; line-height: 1.2; margin-top: 4px; }
+    .carousel-card-name a { color: var(--red); text-decoration: none; transition: opacity .15s; }
+    .carousel-card-name a:hover { opacity: .7; }
+    .carousel-card-role { font-family: 'Source Sans 3', sans-serif; font-size: 11px; font-weight: 400; color: var(--text-light); margin-top: 2px; display: block; }
+    .carousel-card-bio { font-family: 'Lora', serif; font-size: 13px; line-height: 1.6; color: var(--text-mid); margin-top: 4px; }
+    .carousel-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+    .carousel-arrow { width: 36px; height: 36px; padding: 0; background: none; border: none; cursor: pointer; border-radius: 50%; overflow: hidden; flex-shrink: 0; transition: opacity .15s, transform .15s; }
+    .carousel-arrow:hover { opacity: .8; transform: scale(1.05); }
+    .carousel-arrow img { width: 100%; height: 100%; display: block; }
+    .carousel-dots { display: flex; align-items: center; gap: 6px; }
+    .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); transition: background .2s, transform .2s; cursor: pointer; border: none; padding: 0; }
+    .carousel-dot.active { background: var(--red); transform: scale(1.3); }
+
+    /* ── Document carousel ───────────────────────────────────── */
+    .doc-carousel-block {
+      background: #E9E7DC;
+      border-radius: 12px;
+      padding: 14px 18px 18px;
+      margin: 28px 0;
+    }
+    .doc-carousel-header {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-size: 18px; font-weight: 300; letter-spacing: 0; text-transform: uppercase;
+      color: var(--red); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .doc-carousel-header::before { content: ''; display: block; width: 22px; height: 2px; background: var(--red); flex-shrink: 0; }
+    .doc-description {
+      font-family: 'Lora', serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    /* Viewport — side-by-side layout, all 5 cards visible */
+    .doc-stack-viewport { position: relative; height: 240px; }
+
+    .doc-carousel-item {
+      position: absolute;
+      top: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      transition: left .35s ease, top .35s ease, width .35s ease, opacity .35s ease;
+    }
+
+    /* Centre / active card */
+    .doc-carousel-item.slot-center {
+      width: 155px;
+      left: calc(50% - 78px);
+      top: 0;
+      z-index: 3;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* All four flanking cards — shared size and style */
+    .doc-carousel-item.slot-right-1,
+    .doc-carousel-item.slot-right-2,
+    .doc-carousel-item.slot-left-1,
+    .doc-carousel-item.slot-left-2 {
+      width: 118px;
+      top: 25px;
+      z-index: 2;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Individual positions */
+    .doc-carousel-item.slot-right-1 { left: calc(50% + 78px + 14px); }
+    .doc-carousel-item.slot-right-2 { left: calc(50% + 78px + 14px + 118px + 14px); }
+    .doc-carousel-item.slot-left-1  { left: calc(50% - 78px - 14px - 118px); }
+    .doc-carousel-item.slot-left-2  { left: calc(50% - 78px - 14px - 118px - 14px - 118px); }
+
+    /* Off-stage (if ever needed for future expansion) */
+    .doc-carousel-item.slot-hidden {
+      width: 155px; left: calc(50% - 78px); top: 0;
+      z-index: 1; opacity: 0; pointer-events: none;
+    }
+
+    /* Thumbnail — inherits width from parent; height varies by slot */
+    .doc-thumbnail {
+      width: 100%;
+      background: #fff; border-radius: 6px; overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,.12);
+      display: flex; flex-direction: column;
+      text-decoration: none; color: var(--text);
+      transition: box-shadow .15s, transform .15s;
+      cursor: pointer;
+    }
+    .slot-center .doc-thumbnail { height: 205px; }
+    .slot-right-1 .doc-thumbnail, .slot-right-2 .doc-thumbnail,
+    .slot-left-1  .doc-thumbnail, .slot-left-2  .doc-thumbnail { height: 168px; }
+    .slot-center  .doc-thumbnail:hover { box-shadow: 0 5px 18px rgba(0,0,0,.18); transform: translateY(-2px); }
+    .slot-right-1 .doc-thumbnail:hover, .slot-right-2 .doc-thumbnail:hover,
+    .slot-left-1  .doc-thumbnail:hover, .slot-left-2  .doc-thumbnail:hover { box-shadow: 0 3px 12px rgba(0,0,0,.16); }
+
+    .doc-thumbnail {
+      position: relative; /* needed for overlay */
+    }
+    .doc-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+    .doc-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.32);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .25s ease;
+      pointer-events: none;
+    }
+    .doc-thumb-overlay svg {
+      width: 28px;
+      height: 28px;
+      stroke: #fff;
+      opacity: .9;
+    }
+    /* Show overlay on hover — centre card only */
+    .slot-center .doc-thumbnail:hover .doc-thumb-overlay { opacity: 1; background: rgba(0,0,0,.45); }
+
+    /* Caption */
+    .doc-caption { font-family: 'Source Code Pro', monospace; color: var(--text-light); line-height: 1.4; text-align: center; }
+    .slot-center  .doc-caption { font-size: 11px;  max-width: 160px; }
+    .slot-right-1 .doc-caption, .slot-right-2 .doc-caption,
+    .slot-left-1  .doc-caption, .slot-left-2  .doc-caption { font-size: 9.5px; max-width: 118px; }
+
+    /* Buttons flank the viewport */
+    .doc-carousel-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .doc-nav-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--red);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s, transform .15s;
+    }
+    .doc-nav-btn:hover { background: var(--red-dark); transform: scale(1.06); }
+    .doc-nav-btn svg { width: 13px; height: 13px; stroke: #fff; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    /* Dots row — centred, tight spacing */
+    .doc-carousel-dots-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+    }
+    .doc-carousel-dots {
+      display: flex; align-items: center; gap: 5px;
+      height: 12px;
+    }
+    /* Doc-specific dot overrides — sizes are set via JS for the scrolling window */
+    .doc-carousel-dots .carousel-dot {
+      background: #fff;
+      transition: width .2s ease, height .2s ease, opacity .2s ease, background .2s, transform .2s;
+      flex-shrink: 0;
+    }
+    .doc-carousel-dots .carousel-dot.active { background: var(--red); }
+
+    /* ── Two-document carousel variant ──────────────────────── */
+    .doc-carousel-block.doc-two-up {
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .doc-two-up-grid {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+    .doc-two-up-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-two-up-item .doc-thumbnail {
+      width: 155px;
+      height: 205px;
+    }
+    .doc-two-up-item .doc-thumbnail:hover { box-shadow: 0 5px 18px rgba(0,0,0,.18); transform: translateY(-2px); }
+    .doc-two-up-item .doc-thumbnail:hover .doc-thumb-overlay { opacity: 1; background: rgba(0,0,0,.45); }
+    .doc-two-up-item .doc-caption { font-size: 11px; max-width: 155px; }
+
+    /* ── Three-document carousel variant ──────────────────────── */
+    .doc-carousel-block.doc-three-up {
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .doc-three-up-grid {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+    .doc-three-up-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-three-up-item .doc-thumbnail {
+      width: 155px;
+      height: 205px;
+    }
+    .doc-three-up-item .doc-thumbnail:hover { box-shadow: 0 5px 18px rgba(0,0,0,.18); transform: translateY(-2px); }
+    .doc-three-up-item .doc-thumbnail:hover .doc-thumb-overlay { opacity: 1; background: rgba(0,0,0,.45); }
+    .doc-three-up-item .doc-caption { font-size: 11px; max-width: 155px; }
+
+    /* ── Four-document carousel variant ──────────────────────── */
+    .doc-carousel-block.doc-four-up {
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .doc-four-up-grid {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+    .doc-four-up-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-four-up-item .doc-thumbnail {
+      width: 155px;
+      height: 205px;
+    }
+    .doc-four-up-item .doc-thumbnail:hover { box-shadow: 0 5px 18px rgba(0,0,0,.18); transform: translateY(-2px); }
+    .doc-four-up-item .doc-thumbnail:hover .doc-thumb-overlay { opacity: 1; background: rgba(0,0,0,.45); }
+    .doc-four-up-item .doc-caption { font-size: 11px; max-width: 155px; }
+
+    /* ── Inline document carousel ────────────────────────────── */
+    .doc-inline-wrap {
+      float: right;
+      margin: 4px 0 16px 22px;
+      width: 220px;
+      background: #E9E7DC;
+      border-radius: 12px;
+      padding: 12px;
+      clear: right;
+    }
+    .doc-inline-wrap.single {
+      width: 180px;
+    }
+    .doc-inline-main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .doc-inline-viewport {
+      overflow: hidden;
+      width: 128px;
+      flex: none;
+    }
+    .doc-inline-track {
+      display: flex;
+      transition: transform .35s ease;
+    }
+    .doc-inline-slide {
+      min-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-inline-thumb {
+      width: 100%;
+      height: 178px;
+      overflow: hidden;
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 2px 10px rgba(0,0,0,.12);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .doc-inline-thumb:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,.2);
+    }
+    .doc-inline-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+    /* Overlay — hover-only on inline thumbs */
+    .doc-inline-thumb .doc-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.32);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .25s ease, background .15s;
+      pointer-events: none;
+    }
+    .doc-inline-thumb .doc-thumb-overlay svg {
+      width: 24px; height: 24px; stroke: #fff; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .doc-inline-thumb:hover .doc-thumb-overlay { opacity: 1; background: rgba(0,0,0,.45); }
+    .doc-inline-wrap .doc-inline-caption {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 10px;
+      color: var(--text-light);
+      line-height: 1.4;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 6px;
+    }
+    .doc-inline-nav-btn {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--red);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s, transform .15s;
+    }
+    .doc-inline-nav-btn:hover { background: var(--red-dark); transform: scale(1.06); }
+    .doc-inline-nav-btn svg {
+      width: 12px; height: 12px; stroke: #fff; fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .doc-inline-dots-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 4px;
+      gap: 5px;
+      height: 12px;
+    }
+    .doc-inline-dot {
+      border-radius: 50%;
+      background: #fff;
+      border: none; padding: 0; cursor: pointer;
+      transition: width .2s ease, height .2s ease, background .2s ease, opacity .2s ease;
+      flex-shrink: 0;
+    }
+    .doc-inline-dot.active { background: var(--red); }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    .site-footer { background: #222; color: #ccc; padding: 48px 24px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .footer-logo { display: flex; justify-content: center; }
+    .footer-logo img { width: auto; height: 112px; display: block; }
+    .footer-brand { display: flex; justify-content: flex-start; text-align: left; }
+    .footer-tagline { font-family: 'Source Serif 4', serif; font-size: 28px; line-height: 1.4; color: #f4f3ec; max-width: 450px; }
+    .footer-bottom {
+      max-width: 1200px; margin: 32px auto 0; padding-top: 20px;
+      border-top: 1px solid #333; font-size: 12px; font-weight: 700; color: #f4f3ec;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .content-row { grid-template-columns: 1fr; }
+      .sidebar { position: static; order: 2; }
+      main { order: 1; }
+      .footer-inner { grid-template-columns: 1fr; }
+      .footer-logo, .footer-brand { justify-content: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar"></div>
+
+  <!-- Nav -->
+  <header class="site-header">
+    <div class="nav-inner">
+      <button class="nav-menu-btn" onclick="document.getElementById('megaMenu').classList.toggle('open')" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        MENU
+      </button>
+      <a href="#" class="nav-logo" aria-label="OCCRP Home">
+        <img src="logo.png" alt="OCCRP" />
+      </a>
+    </div>
+  </header>
+
+  <!-- Mega-menu -->
+  <div class="mega-menu" id="megaMenu">
+    <div class="mega-menu-panel">
+      <button class="mega-menu-close" onclick="document.getElementById('megaMenu').classList.remove('open')">&times;</button>
+      <a href="#">Investigations</a>
+      <a href="#">Data &amp; Tools</a>
+      <a href="#">Topics</a>
+      <a href="#">Regions</a>
+      <a href="#">About OCCRP</a>
+      <a href="#">Our Network</a>
+      <a href="#">Grants &amp; Fellowships</a>
+      <a href="#">Press Freedom</a>
+      <a href="#">Contact</a>
+      <a href="#" style="color:var(--red)">Donate</a>
+    </div>
+    <div style="flex:1" onclick="document.getElementById('megaMenu').classList.remove('open')"></div>
+  </div>
+
+  <!-- Article header -->
+  <header class="article-header">
+    <h1 class="article-headline">Sanctioned Russian Banker Andrei Kostin, Head of 'Putin's Piggy Bank,' Uses Canadian Man as Proxy For Vast Holdings</h1>
+    <p class="article-deck">A man named Eric Whyte controls offshores that own luxury properties and investments worth millions. Clues suggest he is acting as a proxy for Andrei Kostin, a sanctioned Russian banker with strong Kremlin ties.</p>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero-wrap">
+    <img src="hero.png" alt="Illustration" class="hero-img" />
+    <p class="hero-caption"><strong>Banner Credit:</strong> James O'Brien/OCCRP</p>
+  </div>
+
+  <!-- Content -->
+  <div class="content-row">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <div class="byline-wrap">
+        <div class="reported-by-label">Reported by</div>
+
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="author-avatar">
+            <img src="graham-stack.jpg" alt="Graham Stack" />
+          </div>
+          <div class="author-names">
+            <a href="https://www.occrp.org/en/staff/graham-stack" target="_blank">Graham Stack</a>
+            <span class="collab-note">OCCRP</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="author-avatar">
+            <img src="ilya-lozovsky.jpg" alt="Ilya Lozovsky" />
+          </div>
+          <div class="author-names">
+            <a href="https://www.occrp.org/en/staff/ilya-lozovsky" target="_blank">Ilya Lozovsky</a>
+            <span class="collab-note">OCCRP</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Article body -->
+    <main>
+
+      <details class="key-findings" open>
+        <summary>Key Findings</summary>
+        <ul>
+          <li>Eric Whyte, a Canadian citizen, appears in documents from the Pandora Papers as the beneficial owner of companies set up in the British Virgin Islands that owned luxury properties in Russia and Europe.</li>
+          <li>Some of these firms appear to have been used to hide Andrei Kostin's ownership of an international portfolio of high-end real estate.</li>
+          <li>The companies are connected to others, mostly registered in Cyprus, that own assets worth an estimated $130 million.</li>
+        </ul>
+      </details>
+
+      <div class="article-meta-bar">
+        <div class="article-meta">
+          <div class="article-date">July 28, 2022</div>
+          <span class="article-meta-sep">|</span>
+          <div class="article-read-time">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            11 min read
+          </div>
+        </div>
+        <div class="share-bar">
+          <button class="share-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Text settings
+          </button>
+          <button class="share-btn" onclick="navigator.share ? navigator.share({title:document.title,url:location.href}) : alert('Copy: ' + location.href)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share article
+          </button>
+        </div>
+      </div>
+
+      <div class="article-body">
+        <p>The son of a globe-trotting Canadian communist, Eric Whyte moved to the Soviet Union as a boy in 1966, and was educated at a prestigious school outside Moscow. Those are nearly all of the scant details publicly available about his life –– even "Champagne and Meatballs," a book-length memoir by Whyte's late father, Bert, only mentions his birth.</p>
+        <p>But while Whyte maintains a low profile, leaked corporate documents offer a clue about his activities over the past decade or so: He appears to be a frontman for sanctioned Russian banker Andrei Kostin.</p>
+
+        <div class="article-image-wrap">
+          <img src="eric-whyte.jpg" alt="Eric Whyte" />
+          <div class="article-image-zoom">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="9" y1="11" x2="13" y2="11"/><line x1="11" y1="9" x2="11" y2="13"/></svg>
+          </div>
+          <p class="article-image-credit">Credit: OCCRP</p>
+        </div>
+
+        <p>Whyte owns companies registered in secretive offshore financial jurisdictions that hold luxury properties across Russia and Europe. Many of these assets have links to Kostin, a key Kremlin ally and head of the state-owned bank VTB.</p>
+        <!-- Inline document carousel (1–3 docs POC) -->
+        <div class="doc-inline-wrap">
+          <div class="doc-inline-main">
+
+            <button class="doc-inline-nav-btn doc-inline-prev" aria-label="Previous">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+
+            <div class="doc-inline-viewport">
+              <div class="doc-inline-track">
+
+                <div class="doc-inline-slide">
+                  <a href="#" class="doc-inline-thumb" target="_blank">
+                    <img src="doc-thumb1.jpg" alt="Document 1" />
+                    <div class="doc-thumb-overlay">
+                      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </div>
+                  </a>
+                  <p class="doc-inline-caption">Example of multiple documents in the 'aside' format.</p>
+                </div>
+
+                <div class="doc-inline-slide">
+                  <a href="#" class="doc-inline-thumb" target="_blank">
+                    <img src="doc-thumb2.jpg" alt="Document 2" />
+                    <div class="doc-thumb-overlay">
+                      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </div>
+                  </a>
+                  <p class="doc-inline-caption">Second document caption..</p>
+                </div>
+
+                <div class="doc-inline-slide">
+                  <a href="#" class="doc-inline-thumb" target="_blank">
+                    <img src="doc-thumb3.jpg" alt="Document 3" />
+                    <div class="doc-thumb-overlay">
+                      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </div>
+                  </a>
+                  <p class="doc-inline-caption">Third document caption...</p>
+                </div>
+
+              </div>
+            </div>
+
+            <button class="doc-inline-nav-btn doc-inline-next" aria-label="Next">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+          </div>
+          <div class="doc-inline-dots-wrap"></div>
+        </div>
+
+        <p>A larger corporate network of firms with connections to Eric Whyte's companies owns more properties, as well as investments and stakes in Russian retailers and restaurant chains — including Burger King and KFC — worth some $130 million.</p>
+        <p>"It looks very compelling that Whyte has been acting as a proxy for Kostin," said Tamara Makarenko, a veteran of the business intelligence sector with extensive experience investigating oligarchs.</p>
+        <p>"The pieces of the puzzle… are reflective of how we know oligarchs have been hiding their wealth," she said after reviewing OCCRP's findings.</p>
+        <p>Kostin has good reason for wanting to disguise any riches he might have accrued during his 20 years as chairman of VTB: He is sanctioned in the U.S. and EU for his support of the ongoing Russian war in Ukraine and the annexation of Crimea in 2014.</p>
+        <p>Whyte, Kostin, and VTB all declined to comment for this story. But Kostin did give a frank interview to CNBC in 2018 about the impact the sanctions were having on him personally.</p>
+        <p>He had been unable to travel to Bali for an International Monetary Fund meeting, he said, nor could he go skiing in Colorado. "Which is very unfortunate. The best snow [is] in Colorado –– a very good mountain," he said.</p>
+
+        <!-- Two-document carousel variant -->
+        <div class="doc-carousel-block doc-two-up">
+          <div class="doc-carousel-header">Example of Two Documents</div>
+          <p class="doc-description">An optional description or introduction to the documents can go here.</p>
+          <div class="doc-two-up-grid">
+
+            <div class="doc-two-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb1.jpg" alt="Document 1" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-two-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb2.jpg" alt="Document 2" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Three-document carousel variant -->
+        <div class="doc-carousel-block doc-three-up">
+          <div class="doc-carousel-header">Example of Three Documents</div>
+          <p class="doc-description">An optional description or introduction to the documents can go here.</p>
+          <div class="doc-three-up-grid">
+
+            <div class="doc-three-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb1.jpg" alt="Document 1" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-three-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb2.jpg" alt="Document 2" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-three-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb3.jpg" alt="Document 3" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Four-document carousel variant -->
+        <div class="doc-carousel-block doc-four-up">
+          <div class="doc-carousel-header">Example of Four Documents</div>
+          <p class="doc-description">An optional description or introduction to the documents can go here.</p>
+          <div class="doc-four-up-grid">
+
+            <div class="doc-four-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb1.jpg" alt="Document 1" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-four-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb2.jpg" alt="Document 2" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-four-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb3.jpg" alt="Document 3" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-four-up-item">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb4.jpg" alt="Document 3" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Document carousel -->
+        <div class="doc-carousel-block doc-full">
+          <div class="doc-carousel-header">Example of Five or More Documents</div>
+          <p class="doc-description">If there are more than 5 documents then the carousel arrows and dots WILL show. If there are ONLY 5 documents then the carousel arrows and dots will NOT show. The docs should be sized up to fill the space.</p>
+          <div class="doc-carousel-main">
+          <button class="doc-nav-btn doc-prev" aria-label="Previous document">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="doc-stack-viewport" style="flex:1">
+
+            <div class="doc-carousel-item slot-center">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb1.jpg" alt="Document 1" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-right-1">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb2.jpg" alt="Document 2" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-right-2">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb3.jpg" alt="Document 3" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-left-2">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb4.jpg" alt="Document 4" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-left-1">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb5.jpg" alt="Document 5" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-left-1">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb6.jpg" alt="Document 6" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-left-1">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb7.jpg" alt="Document 7" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+            <div class="doc-carousel-item slot-left-1">
+              <a href="#" class="doc-thumbnail" target="_blank">
+                <img src="doc-thumb8.jpg" alt="Document 8" />
+                <div class="doc-thumb-overlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></div>
+              </a>
+              <p class="doc-caption">An optional caption goes here.</p>
+            </div>
+
+          </div><!-- /doc-stack-viewport -->
+          <button class="doc-nav-btn doc-next" aria-label="Next document">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          </div><!-- /doc-carousel-main -->
+          <div class="doc-carousel-dots-wrap">
+            <div class="doc-carousel-dots"></div>
+          </div>
+        </div>
+
+        <h2>Whyte Winery</h2>
+        <p>During the Soviet years, members of the ruling elite often had summer houses in the sunny seaside town of Foros, on the Crimean peninsula.</p>
+
+        <div class="article-image-wrap">
+          <img src="view-of-foros.jpg" alt="A view of Foros" />
+          <div class="article-image-zoom">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="9" y1="11" x2="13" y2="11"/><line x1="11" y1="9" x2="11" y2="13"/></svg>
+          </div>
+          <p class="article-image-credit">Credit: Zoonar GmbH/Alamy Stock Photo</p>
+        </div>
+
+        <p>After the Russian annexation of Crimea in 2014, a new breed of elite Russians rushed in. Multiple media outlets at the time reported rumors that Andrei Kostin had snapped up a luxury villa in Foros, along with a winery in the Alma Valley, 70 kilometers to the north.</p>
+        <!-- Inline document carousel — single document instance -->
+        <div class="doc-inline-wrap">
+          <div class="doc-inline-main">
+            <button class="doc-inline-nav-btn doc-inline-prev" aria-label="Previous">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div class="doc-inline-viewport">
+              <div class="doc-inline-track">
+                <div class="doc-inline-slide">
+                  <a href="#" class="doc-inline-thumb" target="_blank">
+                    <img src="doc-thumb4.jpg" alt="Document 4" />
+                    <div class="doc-thumb-overlay">
+                      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </div>
+                  </a>
+                  <p class="doc-inline-caption">Example of a single document in the 'aside' format.</p>
+                </div>
+              </div>
+            </div>
+            <button class="doc-inline-nav-btn doc-inline-next" aria-label="Next">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="doc-inline-dots-wrap"></div>
+        </div>
+
+        <p>"Winery executives won't reveal who it belongs to, although the Russian media have speculated that it's the president of one of Russia's most powerful banks," <a href="#">wrote Meinenger's Wine Business International in 2015</a>.</p>
+        <p>A grape vine at Alma had been personally planted by Vladimir Putin, the article reported, before noting that the winery's Petite Arvine white was a "pleasant surprise."</p>
+        <p>While the links to Kostin were never definitively proven, the European Union cited his ownership of the estate and winery when it imposed sanctions on him in 2014, saying he had backed "<a href="#">actions and policies that undermine the territorial integrity of Ukraine</a>" and benefitted from the annexation.</p>
+        <p>Both the winery and the villa, it turns out, were kept in Whyte's hands for years. One of Whyte's offshore companies, <strong>Vargas Properties Ltd.</strong>, controlled the Russian company that owns both the house and the winery.</p>
+        <p><em>This is not a complete story. It has been built as a prototype for the purpose of this test.</em></p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-logo"><img src="logo-dark.png" alt="OCCRP" /></div>
+      <div class="footer-brand"><p class="footer-tagline">A nonprofit, mission-driven newsroom that partners with other media outlets to publish stories that spur action.</p></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 OCCRP</span>
+      <span>
+        <a href="#" style="color:#f4f3ec;margin-right:16px">Privacy Policy</a>
+        <a href="#" style="color:#f4f3ec">Terms of Use</a>
+      </span>
+    </div>
+  </footer>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-inner">
+      <button class="lightbox-close" id="lightboxClose">&times;</button>
+      <img src="" alt="" id="lightboxImg" />
+      <p class="lightbox-credit" id="lightboxCredit"></p>
+    </div>
+  </div>
+
+  <script>
+    // Mega-menu is handled inline above.
+
+    // ── Lightbox ──────────────────────────────────────────────────
+    (function () {
+      var lb      = document.getElementById('lightbox');
+      var lbImg   = document.getElementById('lightboxImg');
+      var lbCredit = document.getElementById('lightboxCredit');
+      var close   = function () { lb.classList.remove('open'); };
+
+      document.querySelectorAll('.article-image-wrap').forEach(function (wrap) {
+        wrap.addEventListener('click', function () {
+          lbImg.src = wrap.querySelector('img').src;
+          lbImg.alt = wrap.querySelector('img').alt;
+          var cr = wrap.querySelector('.article-image-credit');
+          lbCredit.textContent = cr ? cr.textContent : '';
+          lb.classList.add('open');
+        });
+      });
+
+      document.getElementById('lightboxClose').addEventListener('click', close);
+      lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    })();
+
+    // ── Document carousel (side-by-side + Instagram dots) ────────
+    (function () {
+      var block = document.querySelector('.doc-carousel-block.doc-full');
+      if (!block) return;
+
+      var items    = Array.from(block.querySelectorAll('.doc-carousel-item'));
+      var dotsWrap = block.querySelector('.doc-carousel-dots');
+      var total    = items.length;
+      var current  = 0;
+      var MAX_DOTS = 5;
+
+      // Build one dot per item
+      items.forEach(function (_, i) {
+        var dot = document.createElement('button');
+        dot.className = 'carousel-dot';
+        dot.setAttribute('aria-label', 'Go to document ' + (i + 1));
+        dot.addEventListener('click', function () { goTo(i); });
+        dotsWrap.appendChild(dot);
+      });
+
+      // ── Slot assignment ──────────────────────────────────────
+      function getSlot(offset) {
+        if (offset === 0)         return 'slot-center';
+        if (offset === 1)         return 'slot-right-1';
+        if (offset === 2)         return 'slot-right-2';
+        if (offset === total - 1) return 'slot-left-1';
+        if (offset === total - 2) return 'slot-left-2';
+        return 'slot-hidden';
+      }
+
+      var flankingSlots = ['slot-left-1', 'slot-left-2', 'slot-right-1', 'slot-right-2'];
+
+      // ── Instagram-style dot window ───────────────────────────
+      function updateDots() {
+        var dots = Array.from(dotsWrap.querySelectorAll('.carousel-dot'));
+
+        if (total <= MAX_DOTS) {
+          // All dots fit — simple display
+          dots.forEach(function (d, i) {
+            d.style.display = '';
+            d.classList.toggle('active', i === current);
+            d.style.width  = i === current ? '8px' : '6px';
+            d.style.height = i === current ? '8px' : '6px';
+            d.style.opacity = '';
+          });
+          return;
+        }
+
+        // Calculate the visible window of MAX_DOTS
+        var winStart;
+        if (current <= 1) {
+          winStart = 0;
+        } else if (current >= total - 2) {
+          winStart = total - MAX_DOTS;
+        } else {
+          winStart = current - 2;
+        }
+
+        dots.forEach(function (d, i) {
+          var pos = i - winStart; // position within window (0-4)
+          if (pos < 0 || pos >= MAX_DOTS) {
+            d.style.display = 'none';
+            return;
+          }
+          d.style.display = '';
+          d.classList.toggle('active', i === current);
+
+          var isLeftEdge  = pos === 0 && winStart > 0;
+          var isRightEdge = pos === MAX_DOTS - 1 && winStart + MAX_DOTS < total;
+
+          if (i === current) {
+            d.style.width = '8px'; d.style.height = '8px'; d.style.opacity = '1';
+          } else if (isLeftEdge || isRightEdge) {
+            d.style.width = '4px'; d.style.height = '4px'; d.style.opacity = '0.4';
+          } else {
+            d.style.width = '6px'; d.style.height = '6px'; d.style.opacity = '1';
+          }
+        });
+      }
+
+      // ── Navigate ─────────────────────────────────────────────
+      function goTo(index) {
+        current = (index + total) % total;
+
+        items.forEach(function (item, i) {
+          var offset = (i - current + total) % total;
+          var slot   = getSlot(offset);
+          item.className = 'doc-carousel-item ' + slot;
+          item.onclick = (flankingSlots.indexOf(slot) !== -1)
+            ? function (idx) { return function (e) { e.preventDefault(); goTo(idx); }; }(i)
+            : null;
+        });
+
+        updateDots();
+      }
+
+      block.querySelector('.doc-prev').addEventListener('click', function () { goTo(current - 1); });
+      block.querySelector('.doc-next').addEventListener('click', function () { goTo(current + 1); });
+
+      goTo(0); // initialise
+    })();
+
+    // ── Inline document carousel (all instances) ─────────────────
+    document.querySelectorAll('.doc-inline-wrap').forEach(function (wrap) {
+      var track    = wrap.querySelector('.doc-inline-track');
+      var slides   = Array.from(track.querySelectorAll('.doc-inline-slide'));
+      var dotsWrap = wrap.querySelector('.doc-inline-dots-wrap');
+      var prevBtn  = wrap.querySelector('.doc-inline-prev');
+      var nextBtn  = wrap.querySelector('.doc-inline-next');
+      var total    = slides.length;
+      var current  = 0;
+
+      if (total <= 1) {
+        // Single doc — hide buttons and dots wrap, narrow the component
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+        dotsWrap.style.display = 'none';
+        wrap.classList.add('single');
+      } else {
+        // Build dots
+        slides.forEach(function (_, i) {
+          var dot = document.createElement('button');
+          dot.className = 'doc-inline-dot' + (i === 0 ? ' active' : '');
+          dot.setAttribute('aria-label', 'Go to document ' + (i + 1));
+          dot.addEventListener('click', function () { goTo(i); });
+          dotsWrap.appendChild(dot);
+        });
+      }
+
+      function updateDots() {
+        var MAX = 5;
+        var dots = Array.from(dotsWrap.querySelectorAll('.doc-inline-dot'));
+        var winStart = Math.max(0, Math.min(current - 2, total - MAX));
+        dots.forEach(function (d, i) {
+          var pos = i - winStart;
+          if (pos < 0 || pos >= MAX) { d.style.display = 'none'; return; }
+          d.style.display = '';
+          d.classList.toggle('active', i === current);
+          var isEdge = (pos === 0 && winStart > 0) || (pos === MAX - 1 && winStart + MAX < total);
+          if (i === current)  { d.style.width = '8px'; d.style.height = '8px'; d.style.opacity = '1'; }
+          else if (isEdge)    { d.style.width = '4px'; d.style.height = '4px'; d.style.opacity = '0.4'; }
+          else                { d.style.width = '6px'; d.style.height = '6px'; d.style.opacity = '1'; }
+        });
+      }
+
+      function goTo(index) {
+        current = (index + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        updateDots();
+      }
+
+      prevBtn.addEventListener('click', function () { goTo(current - 1); });
+      nextBtn.addEventListener('click', function () { goTo(current + 1); });
+
+      goTo(0);
+    });
+
+    // ── Key Players carousel ──────────────────────────────────────
+    (function () {
+      var track    = document.getElementById('carouselTrack');
+      var dotsWrap = document.getElementById('carouselDots');
+      var cards    = track.querySelectorAll('.carousel-card');
+      var total    = cards.length;
+      var current  = 0;
+
+      cards.forEach(function (_, i) {
+        var dot = document.createElement('button');
+        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+        dot.addEventListener('click', function () { goTo(i); });
+        dotsWrap.appendChild(dot);
+      });
+
+      function goTo(index) {
+        current = (index + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dotsWrap.querySelectorAll('.carousel-dot').forEach(function (d, i) {
+          d.classList.toggle('active', i === current);
+        });
+      }
+
+      document.getElementById('carouselPrev').addEventListener('click', function () { goTo(current - 1); });
+      document.getElementById('carouselNext').addEventListener('click', function () { goTo(current + 1); });
+    })();
+  </script>
+
+</body>
+</html>
